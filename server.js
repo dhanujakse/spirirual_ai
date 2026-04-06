@@ -113,11 +113,13 @@ async function generateLLMDescriptions(videoId, title, ytDesc) {
 
     try {
         const res = await axios.post("https://openrouter.ai/api/v1/chat/completions", {
-            model: "google/gemini-2.5-flash",
+            model: "google/gemini-2.5-flash:free",
+            response_format: { type: "json_object" },
+            max_tokens: 1500,
             messages: [
                 {
                     role: "system",
-                    content: "Analyze the video context. Detect the main language accurately. Output a JSON object STRICTLY matching EXACTLY this format (NO markdown formatting, just parseable JSON): { \"english\": \"2-3 simple English lines explaining student benefit\", \"tamil\": \"2-3 simple Tamil lines translated\" }. Never repeat the title. Ensure it is spiritual and student-friendly."
+                    content: "Analyze the video context. Detect the main language accurately. Output a JSON object STRICTLY matching EXACTLY this format: { \"english\": \"Highly detailed, multi-paragraph English description extracting all key facts, topics, and teachings from the video. Ensure enough details are provided so that any user questions about the video can be answered from this summary alone.\", \"tamil\": \"Translated highly detailed description in Tamil.\" }. Never repeat the title. Ensure it is spiritual, accurate and student-friendly."
                 },
                 { role: "user", content: promptContext }
             ]
@@ -249,4 +251,51 @@ app.post('/api/events/:id/comments', (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
+
+// AI Q&A Endpoint for Videos
+app.post('/api/videos/:id/ask', async (req, res) => {
+    const { question } = req.body;
+    const videoId = req.params.id;
+
+    if (!OPENROUTER_API_KEY) {
+        return res.status(500).json({ answer: "AI service is unavailable. For more queries contact this number - 9677914980" });
+    }
+
+    try {
+        const video = await new Promise((resolve, reject) => {
+            db.get("SELECT title, description, llmEnglish FROM videos WHERE videoId = ?", [videoId], (err, row) => {
+                if (err) reject(err);
+                else resolve(row);
+            });
+        });
+
+        if (!video) {
+            return res.status(404).json({ answer: "Video not found. For more queries contact this number - 9677914980" });
+        }
+
+        const context = `Title: ${video.title}\nDescription: ${video.description}\nAI Summary: ${video.llmEnglish}`;
+        
+        const systemPrompt = `You are a helpful and spiritual assistant. You must answer the user's question based ONLY on the provided video contextual information. 
+If the given context does not contain the answer, or if you are unsure, you MUST reply EXACTLY with: 'For more queries contact this number - 9677914980'. Do not invent answers.`;
+
+        const response = await axios.post("https://openrouter.ai/api/v1/chat/completions", {
+            model: "google/gemini-2.5-flash:free",
+            max_tokens: 1000,
+            messages: [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: `Context:\n${context}\n\nQuestion: ${question}` }
+            ]
+        }, {
+            headers: { "Authorization": `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" }
+        });
+
+        const answer = response.data.choices[0].message.content.trim();
+        res.json({ answer });
+
+    } catch (error) {
+        console.error("Q&A Error:", error.message);
+        res.status(500).json({ answer: "For more queries contact this number - 9677914980" });
+    }
+});
+
 app.listen(PORT, () => { console.log(`🚀 Advanced AI Backend running at http://localhost:${PORT}`); });

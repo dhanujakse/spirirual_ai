@@ -391,9 +391,9 @@ const DynamicSummaryBadge = ({ video }) => {
   if (!video.llmEnglish || video.llmEnglish.includes("Processing")) return null;
   return (
     <div style={{ marginTop: 12, padding: 12, background: 'rgba(147, 51, 234, 0.05)', borderRadius: 12, borderLeft: '4px solid #9333ea' }}>
-      <h4 style={{ fontSize: '0.85rem', color: '#4c1d95', fontWeight: 800, marginBottom: 4 }}>🤖 AI Analysis:</h4>
-      <p style={{ fontSize: '0.8rem', color: '#1e293b', marginBottom: 6 }}><strong>EN:</strong> {video.llmEnglish}</p>
-      <p style={{ fontSize: '0.8rem', color: '#1e293b' }}><strong>TA:</strong> {video.llmTamil}</p>
+      <h4 style={{ fontSize: '1rem', color: '#4c1d95', fontWeight: 800, marginBottom: 12 }}>📖 AI Description</h4>
+      <div style={{ fontSize: '0.9rem', color: '#1e293b', marginBottom: 24, whiteSpace: 'pre-wrap', lineHeight: '1.6' }}><strong>EN:</strong><br/><br/>{video.llmEnglish}</div>
+      <div style={{ fontSize: '0.9rem', color: '#1e293b', whiteSpace: 'pre-wrap', lineHeight: '1.6' }}><strong>TA:</strong><br/><br/>{video.llmTamil}</div>
     </div>
   );
 };
@@ -531,11 +531,7 @@ const MainDashboard = ({ videos, isLoggedIn, setIsLoggedIn, showLogin, setShowLo
               </div>
               <div className="vid-details" style={{ transform: 'translateZ(30px)' }}>
                 <h4 className="vid-title">{video.title}</h4>
-                {/* Actual YouTube Description injected exactly as requested */}
-                <p className="vid-desc"><strong>Description:</strong> {video.description || "No description provided by channel."}.. (Click video to play)</p>
-
-                {/* In-Place Dynamic LLM Summary functionality */}
-                <DynamicSummaryBadge video={video} openRouterKey={openRouterKey} />
+                <p style={{fontSize: '0.75rem', color: '#94a3b8', marginTop: 8, fontStyle: 'italic'}}>(Click video for detailed AI Description)</p>
               </div>
             </TiltCard>
           ))}
@@ -560,7 +556,7 @@ const MainDashboard = ({ videos, isLoggedIn, setIsLoggedIn, showLogin, setShowLo
                   <div className="thumbnail-box" style={{ transform: 'translateZ(15px)' }}><img src={video.thumbnail} alt={video.title} /></div>
                   <div className="vid-details" style={{ transform: 'translateZ(25px)' }}>
                     <h4 className="vid-title">{video.title}</h4>
-                    <DynamicSummaryBadge video={video} />
+                    <p style={{fontSize: '0.75rem', color: '#94a3b8', marginTop: 8, fontStyle: 'italic'}}>(Click to view Details)</p>
                   </div>
                 </TiltCard>
               ))}
@@ -741,8 +737,7 @@ const ExplorePage = ({ openRouterKey }) => {
               </div>
               <div className="vid-details" style={{ transform: 'translateZ(20px)' }}>
                 <h4 className="vid-title">{video.title}</h4>
-                <p className="vid-desc"><strong>Description:</strong> {video.description || "No description provided by channel"}.. (Click to play)</p>
-                <DynamicSummaryBadge video={video} />
+                <p style={{fontSize: '0.75rem', color: '#94a3b8', marginTop: 8, fontStyle: 'italic'}}>(Click video for detailed AI Description)</p>
               </div>
             </TiltCard>
           ))}
